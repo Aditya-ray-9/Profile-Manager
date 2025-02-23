@@ -30,7 +30,7 @@
         h2 {
             margin-bottom: 20px;
         }
-        input, button {
+        input, button, textarea {
             width: 100%;
             padding: 10px;
             margin: 5px 0;
@@ -45,19 +45,6 @@
         }
         button:hover {
             background: #0056b3;
-        }
-        .profile-list {
-            margin-top: 10px;
-            text-align: left;
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            padding: 10px;
-            display: none;
-        }
-        .profile {
-            padding: 5px;
-            border-bottom: 1px solid #ddd;
         }
 
         /* Modal Styling */
@@ -89,6 +76,29 @@
         .modal.active {
             transform: scale(1);
         }
+
+        /* ID Card Style */
+        .id-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #007bff;
+            width: 100%;
+        }
+        .id-card img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px solid #007bff;
+            object-fit: cover;
+        }
+        .id-card input[type="file"] {
+            margin: 10px 0;
+        }
+        .id-card textarea {
+            height: 80px; /* Increased size */
+        }
     </style>
 </head>
 <body>
@@ -106,11 +116,15 @@
     <div class="overlay" id="overlay">
         <div class="modal">
             <h2>Create Profile</h2>
-            <input type="text" id="profileId" placeholder="Enter ID">
-            <input type="text" id="profileName" placeholder="Enter Name">
-            <textarea id="profileDescription" placeholder="Enter Description"></textarea>
-            <button onclick="saveProfile()">Save Profile</button>
-            <button onclick="closeProfileForm()">Cancel</button>
+            <div class="id-card">
+                <img id="previewImg" src="https://via.placeholder.com/80" alt="Profile Picture">
+                <input type="file" id="profileImage" accept="image/*" onchange="previewImage(event)">
+                <input type="text" id="profileId" placeholder="Enter ID">
+                <input type="text" id="profileName" placeholder="Enter Name">
+                <textarea id="profileDescription" placeholder="Enter Description"></textarea>
+                <button onclick="saveProfile()">Save Profile</button>
+                <button onclick="closeProfileForm()">Cancel</button>
+            </div>
         </div>
     </div>
 
@@ -131,6 +145,7 @@
             let id = document.getElementById("profileId").value.trim();
             let name = document.getElementById("profileName").value.trim();
             let description = document.getElementById("profileDescription").value.trim();
+            let image = document.getElementById("previewImg").src;
 
             if (id === "" || name === "") {
                 alert("ID and Name are required!");
@@ -138,7 +153,7 @@
             }
 
             let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
-            profiles.push({ id, name, description });
+            profiles.push({ id, name, description, image });
             localStorage.setItem("profiles", JSON.stringify(profiles));
 
             alert("Profile saved successfully!");
@@ -154,7 +169,14 @@
             profiles.forEach(profile => {
                 let div = document.createElement("div");
                 div.className = "profile";
-                div.textContent = `ID: ${profile.id}, Name: ${profile.name}`;
+                div.innerHTML = `
+                    <div class="id-card">
+                        <img src="${profile.image}" alt="Profile Pic">
+                        <p><strong>ID:</strong> ${profile.id}</p>
+                        <p><strong>Name:</strong> ${profile.name}</p>
+                        <p><strong>Description:</strong> ${profile.description}</p>
+                    </div>
+                `;
                 profileList.appendChild(div);
             });
         }
@@ -174,12 +196,28 @@
                 if (profile.id.toLowerCase().includes(query) || profile.name.toLowerCase().includes(query)) {
                     let div = document.createElement("div");
                     div.className = "profile";
-                    div.textContent = `ID: ${profile.id}, Name: ${profile.name}`;
+                    div.innerHTML = `
+                        <div class="id-card">
+                            <img src="${profile.image}" alt="Profile Pic">
+                            <p><strong>ID:</strong> ${profile.id}</p>
+                            <p><strong>Name:</strong> ${profile.name}</p>
+                            <p><strong>Description:</strong> ${profile.description}</p>
+                        </div>
+                    `;
                     profileList.appendChild(div);
                 }
             });
 
             profileList.style.display = "block";
+        }
+
+        function previewImage(event) {
+            let reader = new FileReader();
+            reader.onload = function(){
+                let output = document.getElementById("previewImg");
+                output.src = reader.result;
+            };
+            reader.readAsDataURL(event.target.files[0]);
         }
     </script>
 
