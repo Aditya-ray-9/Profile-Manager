@@ -30,7 +30,7 @@
         h2 {
             margin-bottom: 20px;
         }
-        input, button, select {
+        input, button {
             width: 100%;
             padding: 10px;
             margin: 5px 0;
@@ -59,10 +59,41 @@
             padding: 5px;
             border-bottom: 1px solid #ddd;
         }
+
+        /* Modal Styling */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal {
+            background: white;
+            padding: 20px;
+            width: 90%;
+            max-width: 350px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+        .overlay.active {
+            display: flex;
+        }
+        .modal.active {
+            transform: scale(1);
+        }
     </style>
 </head>
 <body>
 
+    <!-- Main Container -->
     <div class="container">
         <h2>Profile Manager</h2>
         <button onclick="openProfileForm()">Create Profile</button>
@@ -71,24 +102,29 @@
         <div class="profile-list" id="profileList"></div>
     </div>
 
-    <div class="container" id="profileForm" style="display: none;">
-        <h2>Create Profile</h2>
-        <input type="text" id="profileId" placeholder="Enter ID">
-        <input type="text" id="profileName" placeholder="Enter Name">
-        <textarea id="profileDescription" placeholder="Enter Description"></textarea>
-        <button onclick="saveProfile()">Save Profile</button>
-        <button onclick="closeProfileForm()">Cancel</button>
+    <!-- Create Profile Modal -->
+    <div class="overlay" id="overlay">
+        <div class="modal">
+            <h2>Create Profile</h2>
+            <input type="text" id="profileId" placeholder="Enter ID">
+            <input type="text" id="profileName" placeholder="Enter Name">
+            <textarea id="profileDescription" placeholder="Enter Description"></textarea>
+            <button onclick="saveProfile()">Save Profile</button>
+            <button onclick="closeProfileForm()">Cancel</button>
+        </div>
     </div>
 
     <script>
         document.addEventListener("DOMContentLoaded", loadProfiles);
 
         function openProfileForm() {
-            document.getElementById("profileForm").style.display = "block";
+            document.getElementById("overlay").classList.add("active");
+            document.querySelector(".modal").classList.add("active");
         }
 
         function closeProfileForm() {
-            document.getElementById("profileForm").style.display = "none";
+            document.getElementById("overlay").classList.remove("active");
+            document.querySelector(".modal").classList.remove("active");
         }
 
         function saveProfile() {
