@@ -25,19 +25,33 @@
         h1 {
             margin-bottom: 20px;
         }
-        button {
-            width: 100%;
+        input, button {
+            width: 90%;
             padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            font-size: 16px;
+            border: none;
+        }
+        input {
+            background: #444;
+            color: white;
+        }
+        button {
             background-color: #007bff;
             color: white;
-            border: none;
-            border-radius: 5px;
             cursor: pointer;
-            margin: 5px 0;
-            font-size: 16px;
         }
         button:hover {
             background-color: #0056b3;
+        }
+        .profile-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+            padding: 10px;
+            background: #1e222b;
+            border-radius: 10px;
         }
         .profile {
             border: 2px solid #007bff;
@@ -97,6 +111,7 @@
             transition: transform 0.3s ease, opacity 0.3s ease;
         }
         .popup.show {
+            display: block;
             transform: translate(-50%, -50%) scale(1);
             opacity: 1;
         }
@@ -105,9 +120,6 @@
             height: 150px;
             border-radius: 50%;
             cursor: pointer;
-        }
-        .popup button {
-            margin-top: 10px;
         }
         .blur-background {
             filter: blur(5px);
@@ -118,12 +130,16 @@
 
     <div class="container">
         <h1>Profile Manager</h1>
+
+        <!-- Search bar -->
+        <input type="text" id="searchInput" placeholder="Enter ID to search">
+        <button onclick="searchProfile()">Search</button>
+
+        <!-- Create profile button -->
         <button onclick="showProfileForm()">Create Profile</button>
 
-        <input type="text" id="searchInput" placeholder="Search by ID or Name" oninput="searchProfiles()">
-        <button onclick="showProfiles()">Show Profiles</button>
-
-        <div id="profilesList"></div>
+        <!-- Profile list -->
+        <div class="profile-list" id="profilesList"></div>
     </div>
 
     <!-- Profile Form Popup -->
@@ -219,16 +235,15 @@
             showProfiles();
         }
 
-        function editProfile(index) {
+        function searchProfile() {
+            let id = document.getElementById("searchInput").value;
             let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
-            let profile = profiles[index];
-
-            document.getElementById("profileID").value = profile.id;
-            document.getElementById("profileName").value = profile.name;
-            document.getElementById("profileDescription").value = profile.description;
-            document.getElementById("profileImagePreview").src = profile.imageUrl;
-
-            showProfileForm();
+            let found = profiles.find(p => p.id === id);
+            if (found) {
+                alert(`ID: ${found.id}\nName: ${found.name}\nDescription: ${found.description}`);
+            } else {
+                alert("Profile not found.");
+            }
         }
     </script>
 
