@@ -8,15 +8,16 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            background-color: #f8f9fa;
+            background-color: #282c36; /* Dark theme */
+            color: white;
         }
         .container {
             max-width: 500px;
             margin: 20px auto;
-            background: white;
+            background: #3a3f4b;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
         }
         h1 {
             margin-bottom: 20px;
@@ -48,8 +49,14 @@
             border-radius: 10px;
             padding: 15px;
             margin: 10px 0;
-            background: white;
+            background: #1e222b;
             box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .profile:hover {
+            transform: scale(1.02);
         }
         .profile img {
             width: 100px;
@@ -57,8 +64,45 @@
             border-radius: 50%;
             border: 2px solid #007bff;
         }
-        .profile h2, .profile p {
-            margin: 5px 0;
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: red;
+            border: none;
+            padding: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+        }
+        /* Profile Popup */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            color: black;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .popup img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+        }
+        .popup button {
+            background-color: red;
+            margin-top: 10px;
+        }
+        .blurred {
+            filter: blur(5px);
         }
     </style>
 </head>
@@ -72,7 +116,18 @@
         <div id="profilesList"></div>
     </div>
 
+    <!-- Profile Popup -->
+    <div id="profilePopup" class="popup">
+        <img id="popupImage" src="" alt="Profile Pic">
+        <h2 id="popupID"></h2>
+        <p><b>Name:</b> <span id="popupName"></span></p>
+        <p><b>Description:</b> <span id="popupDescription"></span></p>
+        <button onclick="closePopup()">Close</button>
+    </div>
+
     <script>
+        document.addEventListener("DOMContentLoaded", showProfiles); // Load profiles on page load
+
         function createProfile() {
             let id = prompt("Enter Profile ID:");
             let name = prompt("Enter Name:");
@@ -91,7 +146,9 @@
                 imageUrl: imageUrl || "https://via.placeholder.com/100" // Default profile pic
             };
 
-            localStorage.setItem(id, JSON.stringify(profile));
+            let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
+            profiles.push(profile);
+            localStorage.setItem("profiles", JSON.stringify(profiles));
             alert("Profile Created!");
             showProfiles();
         }
@@ -100,22 +157,28 @@
             let profilesDiv = document.getElementById("profilesList");
             profilesDiv.innerHTML = "";
 
-            for (let i = 0; i < localStorage.length; i++) {
-                let key = localStorage.key(i);
-                let profile = JSON.parse(localStorage.getItem(key));
+            let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
 
+            profiles.forEach((profile, index) => {
                 let profileDiv = document.createElement("div");
                 profileDiv.classList.add("profile");
-
                 profileDiv.innerHTML = `
+                    <button class="delete-btn" onclick="deleteProfile(${index})">X</button>
                     <img src="${profile.imageUrl}" alt="Profile Pic">
                     <h2>ID: ${profile.id}</h2>
                     <p><b>Name:</b> ${profile.name}</p>
                     <p><b>Description:</b> ${profile.description}</p>
                 `;
-
+                profileDiv.onclick = () => viewProfile(profile);
                 profilesDiv.appendChild(profileDiv);
-            }
+            });
+        }
+
+        function deleteProfile(index) {
+            let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
+            profiles.splice(index, 1);
+            localStorage.setItem("profiles", JSON.stringify(profiles));
+            showProfiles();
         }
 
         function searchProfiles() {
@@ -123,24 +186,37 @@
             let profilesDiv = document.getElementById("profilesList");
             profilesDiv.innerHTML = "";
 
-            for (let i = 0; i < localStorage.length; i++) {
-                let key = localStorage.key(i);
-                let profile = JSON.parse(localStorage.getItem(key));
+            let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
 
+            profiles.forEach((profile, index) => {
                 if (profile.id.toLowerCase().includes(query) || profile.name.toLowerCase().includes(query)) {
                     let profileDiv = document.createElement("div");
                     profileDiv.classList.add("profile");
-
                     profileDiv.innerHTML = `
+                        <button class="delete-btn" onclick="deleteProfile(${index})">X</button>
                         <img src="${profile.imageUrl}" alt="Profile Pic">
                         <h2>ID: ${profile.id}</h2>
                         <p><b>Name:</b> ${profile.name}</p>
                         <p><b>Description:</b> ${profile.description}</p>
                     `;
-
+                    profileDiv.onclick = () => viewProfile(profile);
                     profilesDiv.appendChild(profileDiv);
                 }
-            }
+            });
+        }
+
+        function viewProfile(profile) {
+            document.getElementById("profilePopup").style.display = "block";
+            document.getElementById("popupImage").src = profile.imageUrl;
+            document.getElementById("popupID").innerText = `ID: ${profile.id}`;
+            document.getElementById("popupName").innerText = profile.name;
+            document.getElementById("popupDescription").innerText = profile.description;
+            document.body.classList.add("blurred");
+        }
+
+        function closePopup() {
+            document.getElementById("profilePopup").style.display = "none";
+            document.body.classList.remove("blurred");
         }
     </script>
 
