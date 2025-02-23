@@ -26,6 +26,7 @@
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             text-align: center;
+            position: relative;
         }
         h2 {
             margin-bottom: 20px;
@@ -47,15 +48,21 @@
             background: #0056b3;
         }
 
-        /* ID Card Styling */
-        .id-card {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            border: 2px solid #007bff;
+        /* Overlay Form */
+        .overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             width: 100%;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            display: none;
         }
+
+        /* Profile Image */
         .profile-pic {
             width: 100px;
             height: 100px;
@@ -64,9 +71,6 @@
             object-fit: cover;
             cursor: pointer;
             margin-bottom: 10px;
-        }
-        .id-card textarea {
-            height: 80px;
         }
         .profile-list {
             display: none;
@@ -82,14 +86,15 @@
         <input type="text" id="search" placeholder="Search by ID or Name" onkeyup="searchProfile()">
         <button onclick="toggleProfileList()">Show Profiles</button>
 
-        <!-- Create Profile Section -->
-        <div class="id-card" id="profileForm" style="display: none;">
+        <!-- Create Profile Form (Overlay) -->
+        <div class="overlay" id="profileForm">
             <img id="previewImg" class="profile-pic" src="https://via.placeholder.com/100" alt="Profile Picture" onclick="openFileInput()">
             <input type="file" id="profileImage" accept="image/*" style="display: none;" onchange="previewImage(event)">
             <input type="text" id="profileId" placeholder="Enter ID">
             <input type="text" id="profileName" placeholder="Enter Name">
             <textarea id="profileDescription" placeholder="Enter Description"></textarea>
             <button onclick="saveProfile()">Save Profile</button>
+            <button onclick="toggleProfileForm()">Close</button>
         </div>
 
         <!-- Profile List -->
