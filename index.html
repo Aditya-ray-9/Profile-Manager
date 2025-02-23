@@ -5,103 +5,147 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile Manager</title>
     <style>
-        /* General Styles */
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(to right, #ff758c, #ff7eb3);
-            text-align: center;
-            color: white;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
         }
-
-        .box {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 20px;
-            border-radius: 15px;
+        body {
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
             width: 90%;
             max-width: 400px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(15px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
         }
-
-        h1 {
-            font-size: 1.8em;
+        h2 {
+            margin-bottom: 20px;
         }
-
-        /* Buttons */
+        input, button, select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
         button {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            padding: 12px;
-            width: 100%;
-            margin: 10px 0;
-            font-size: 16px;
+            background: #007bff;
             color: white;
-            border-radius: 10px;
+            border: none;
             cursor: pointer;
-            transition: 0.3s;
         }
-
         button:hover {
-            background: rgba(255, 255, 255, 0.4);
+            background: #0056b3;
         }
-
-        /* Profile List */
         .profile-list {
-            width: 100%;
-            max-height: 250px;
+            margin-top: 10px;
+            text-align: left;
+            max-height: 200px;
             overflow-y: auto;
-            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid #ddd;
             padding: 10px;
-            border-radius: 10px;
-            margin-top: 15px;
-            backdrop-filter: blur(10px);
+            display: none;
         }
-
-        .profile-item {
-            display: flex;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.3);
-            padding: 10px;
-            border-radius: 8px;
-            margin: 8px 0;
-        }
-
-        .profile-item img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-
-        .profile-name {
-            font-weight: bold;
+        .profile {
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
         }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h1>Profile Manager</h1>
-        <button onclick="window.location.href='search.html'">Search Profiles</button>
-        <button onclick="openModal()">Create Profile</button>
 
-        <!-- Profile List -->
-        <div class="profile-list" id="profileList">
-            <p>No profiles added yet.</p>
-        </div>
+    <div class="container">
+        <h2>Profile Manager</h2>
+        <button onclick="openProfileForm()">Create Profile</button>
+        <input type="text" id="search" placeholder="Search by ID" onkeyup="searchProfile()">
+        <button onclick="toggleProfileList()">Show Profiles</button>
+        <div class="profile-list" id="profileList"></div>
+    </div>
+
+    <div class="container" id="profileForm" style="display: none;">
+        <h2>Create Profile</h2>
+        <input type="text" id="profileId" placeholder="Enter ID">
+        <input type="text" id="profileName" placeholder="Enter Name">
+        <textarea id="profileDescription" placeholder="Enter Description"></textarea>
+        <button onclick="saveProfile()">Save Profile</button>
+        <button onclick="closeProfileForm()">Cancel</button>
     </div>
 
     <script>
-        function openModal() {
-            alert("Profile creation modal will be here!");
+        document.addEventListener("DOMContentLoaded", loadProfiles);
+
+        function openProfileForm() {
+            document.getElementById("profileForm").style.display = "block";
+        }
+
+        function closeProfileForm() {
+            document.getElementById("profileForm").style.display = "none";
+        }
+
+        function saveProfile() {
+            let id = document.getElementById("profileId").value.trim();
+            let name = document.getElementById("profileName").value.trim();
+            let description = document.getElementById("profileDescription").value.trim();
+
+            if (id === "" || name === "") {
+                alert("ID and Name are required!");
+                return;
+            }
+
+            let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
+            profiles.push({ id, name, description });
+            localStorage.setItem("profiles", JSON.stringify(profiles));
+
+            alert("Profile saved successfully!");
+            closeProfileForm();
+            loadProfiles();
+        }
+
+        function loadProfiles() {
+            let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
+            let profileList = document.getElementById("profileList");
+            profileList.innerHTML = "";
+            
+            profiles.forEach(profile => {
+                let div = document.createElement("div");
+                div.className = "profile";
+                div.textContent = `ID: ${profile.id}, Name: ${profile.name}`;
+                profileList.appendChild(div);
+            });
+        }
+
+        function toggleProfileList() {
+            let profileList = document.getElementById("profileList");
+            profileList.style.display = profileList.style.display === "block" ? "none" : "block";
+        }
+
+        function searchProfile() {
+            let query = document.getElementById("search").value.toLowerCase();
+            let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
+            let profileList = document.getElementById("profileList");
+            profileList.innerHTML = "";
+
+            profiles.forEach(profile => {
+                if (profile.id.toLowerCase().includes(query) || profile.name.toLowerCase().includes(query)) {
+                    let div = document.createElement("div");
+                    div.className = "profile";
+                    div.textContent = `ID: ${profile.id}, Name: ${profile.name}`;
+                    profileList.appendChild(div);
+                }
+            });
+
+            profileList.style.display = "block";
         }
     </script>
+
 </body>
 </html>
