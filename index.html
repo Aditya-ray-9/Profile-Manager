@@ -39,14 +39,6 @@
         button:hover {
             background-color: #0056b3;
         }
-        input {
-            width: 95%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
-        }
         .profile {
             border: 2px solid #007bff;
             border-radius: 10px;
@@ -67,9 +59,8 @@
             border-radius: 50%;
             border: 2px solid #007bff;
         }
-        .delete-btn {
+        .delete-btn, .edit-btn {
             position: absolute;
-            top: 10px;
             right: 10px;
             background-color: red;
             border: none;
@@ -78,8 +69,15 @@
             cursor: pointer;
             color: white;
         }
+        .delete-btn {
+            top: 10px;
+        }
+        .edit-btn {
+            top: 50px;
+            background-color: orange;
+        }
 
-        /* Profile Popup */
+        /* Profile Form Popup */
         .popup {
             display: none;
             position: fixed;
@@ -106,9 +104,9 @@
             width: 150px;
             height: 150px;
             border-radius: 50%;
+            cursor: pointer;
         }
         .popup button {
-            background-color: red;
             margin-top: 10px;
         }
         .blur-background {
@@ -120,13 +118,7 @@
 
     <div class="container">
         <h1>Profile Manager</h1>
-        
-        <!-- Form for Profile Creation -->
-        <input type="text" id="profileID" placeholder="Enter Profile ID">
-        <input type="text" id="profileName" placeholder="Enter Name">
-        <input type="text" id="profileDescription" placeholder="Enter Description">
-        <input type="text" id="profileImage" placeholder="Enter Image URL (optional)">
-        <button onclick="createProfile()">Create Profile</button>
+        <button onclick="showProfileForm()">Create Profile</button>
 
         <input type="text" id="searchInput" placeholder="Search by ID or Name" oninput="searchProfiles()">
         <button onclick="showProfiles()">Show Profiles</button>
@@ -134,26 +126,59 @@
         <div id="profilesList"></div>
     </div>
 
-    <!-- Profile Popup -->
-    <div id="profilePopup" class="popup">
-        <img id="popupImage" src="" alt="Profile Pic">
-        <h2 id="popupID"></h2>
-        <p><b>Name:</b> <span id="popupName"></span></p>
-        <p><b>Description:</b> <span id="popupDescription"></span></p>
-        <button onclick="closePopup()">Close</button>
+    <!-- Profile Form Popup -->
+    <div id="profileForm" class="popup">
+        <h2>Create Profile</h2>
+        <div onclick="selectImage()" style="display: inline-block;">
+            <img id="profileImagePreview" src="https://via.placeholder.com/150" alt="Profile Pic">
+        </div>
+        <input type="file" id="profileImageInput" style="display: none" accept="image/*" onchange="loadImage(event)">
+        <button onclick="removeImage()">Remove Picture</button>
+
+        <input type="text" id="profileID" placeholder="Enter Profile ID">
+        <input type="text" id="profileName" placeholder="Enter Name">
+        <input type="text" id="profileDescription" placeholder="Enter Description">
+        <button onclick="createProfile()">Save Profile</button>
+        <button onclick="closeProfileForm()">Cancel</button>
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", showProfiles); // Load profiles on page load
+        document.addEventListener("DOMContentLoaded", showProfiles);
+
+        function showProfileForm() {
+            document.getElementById("profileForm").classList.add("show");
+            document.body.classList.add("blur-background");
+        }
+
+        function closeProfileForm() {
+            document.getElementById("profileForm").classList.remove("show");
+            document.body.classList.remove("blur-background");
+        }
+
+        function selectImage() {
+            document.getElementById("profileImageInput").click();
+        }
+
+        function loadImage(event) {
+            let reader = new FileReader();
+            reader.onload = function () {
+                document.getElementById("profileImagePreview").src = reader.result;
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        function removeImage() {
+            document.getElementById("profileImagePreview").src = "https://via.placeholder.com/150";
+        }
 
         function createProfile() {
             let id = document.getElementById("profileID").value;
             let name = document.getElementById("profileName").value;
             let description = document.getElementById("profileDescription").value;
-            let imageUrl = document.getElementById("profileImage").value || "https://via.placeholder.com/100";
+            let imageUrl = document.getElementById("profileImagePreview").src;
 
             if (!id || !name || !description) {
-                alert("All fields except Image URL are required!");
+                alert("All fields are required!");
                 return;
             }
 
@@ -162,7 +187,7 @@
             profiles.push(profile);
             localStorage.setItem("profiles", JSON.stringify(profiles));
 
-            alert("Profile Created!");
+            closeProfileForm();
             showProfiles();
         }
 
@@ -177,12 +202,12 @@
                 profileDiv.classList.add("profile");
                 profileDiv.innerHTML = `
                     <button class="delete-btn" onclick="deleteProfile(${index})">X</button>
+                    <button class="edit-btn" onclick="editProfile(${index})">Edit</button>
                     <img src="${profile.imageUrl}" alt="Profile Pic">
                     <h2>ID: ${profile.id}</h2>
                     <p><b>Name:</b> ${profile.name}</p>
                     <p><b>Description:</b> ${profile.description}</p>
                 `;
-                profileDiv.onclick = () => viewProfile(profile);
                 profilesDiv.appendChild(profileDiv);
             });
         }
@@ -194,42 +219,16 @@
             showProfiles();
         }
 
-        function searchProfiles() {
-            let query = document.getElementById("searchInput").value.toLowerCase();
-            let profilesDiv = document.getElementById("profilesList");
-            profilesDiv.innerHTML = "";
-
+        function editProfile(index) {
             let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
+            let profile = profiles[index];
 
-            profiles.forEach((profile, index) => {
-                if (profile.id.toLowerCase().includes(query) || profile.name.toLowerCase().includes(query)) {
-                    let profileDiv = document.createElement("div");
-                    profileDiv.classList.add("profile");
-                    profileDiv.innerHTML = `
-                        <button class="delete-btn" onclick="deleteProfile(${index})">X</button>
-                        <img src="${profile.imageUrl}" alt="Profile Pic">
-                        <h2>ID: ${profile.id}</h2>
-                        <p><b>Name:</b> ${profile.name}</p>
-                        <p><b>Description:</b> ${profile.description}</p>
-                    `;
-                    profileDiv.onclick = () => viewProfile(profile);
-                    profilesDiv.appendChild(profileDiv);
-                }
-            });
-        }
+            document.getElementById("profileID").value = profile.id;
+            document.getElementById("profileName").value = profile.name;
+            document.getElementById("profileDescription").value = profile.description;
+            document.getElementById("profileImagePreview").src = profile.imageUrl;
 
-        function viewProfile(profile) {
-            document.getElementById("profilePopup").classList.add("show");
-            document.getElementById("popupImage").src = profile.imageUrl;
-            document.getElementById("popupID").innerText = `ID: ${profile.id}`;
-            document.getElementById("popupName").innerText = profile.name;
-            document.getElementById("popupDescription").innerText = profile.description;
-            document.body.classList.add("blur-background");
-        }
-
-        function closePopup() {
-            document.getElementById("profilePopup").classList.remove("show");
-            document.body.classList.remove("blur-background");
+            showProfileForm();
         }
     </script>
 
