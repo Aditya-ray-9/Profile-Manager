@@ -5,192 +5,142 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile Manager</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
         body {
-            background-color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f8f9fa;
         }
         .container {
-            width: 90%;
-            max-width: 400px;
-            background: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            position: relative;
-        }
-        h2 {
-            margin-bottom: 20px;
-        }
-        input, button, textarea {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-
-        /* Overlay Form */
-        .overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%;
+            max-width: 500px;
+            margin: 20px auto;
             background: white;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-            display: none;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
         }
-
-        /* Profile Image */
-        .profile-pic {
+        h1 {
+            margin-bottom: 20px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input {
+            width: 95%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .profile {
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            background: white;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .profile img {
             width: 100px;
             height: 100px;
             border-radius: 50%;
             border: 2px solid #007bff;
-            object-fit: cover;
-            cursor: pointer;
-            margin-bottom: 10px;
         }
-        .profile-list {
-            display: none;
-            margin-top: 20px;
+        .profile h2, .profile p {
+            margin: 5px 0;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>Profile Manager</h2>
-        <button onclick="toggleProfileForm()">Create Profile</button>
-        <input type="text" id="search" placeholder="Search by ID or Name" onkeyup="searchProfile()">
-        <button onclick="toggleProfileList()">Show Profiles</button>
-
-        <!-- Create Profile Form (Overlay) -->
-        <div class="overlay" id="profileForm">
-            <img id="previewImg" class="profile-pic" src="https://via.placeholder.com/100" alt="Profile Picture" onclick="openFileInput()">
-            <input type="file" id="profileImage" accept="image/*" style="display: none;" onchange="previewImage(event)">
-            <input type="text" id="profileId" placeholder="Enter ID">
-            <input type="text" id="profileName" placeholder="Enter Name">
-            <textarea id="profileDescription" placeholder="Enter Description"></textarea>
-            <button onclick="saveProfile()">Save Profile</button>
-            <button onclick="toggleProfileForm()">Close</button>
-        </div>
-
-        <!-- Profile List -->
-        <div class="profile-list" id="profileList"></div>
+        <h1>Profile Manager</h1>
+        <button onclick="createProfile()">Create Profile</button>
+        <input type="text" id="searchInput" placeholder="Search by ID or Name" oninput="searchProfiles()">
+        <button onclick="showProfiles()">Show Profiles</button>
+        <div id="profilesList"></div>
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", loadProfiles);
+        function createProfile() {
+            let id = prompt("Enter Profile ID:");
+            let name = prompt("Enter Name:");
+            let description = prompt("Enter Description:");
+            let imageUrl = prompt("Enter Image URL (leave empty for default):");
 
-        function toggleProfileForm() {
-            let form = document.getElementById("profileForm");
-            form.style.display = form.style.display === "block" ? "none" : "block";
-        }
-
-        function toggleProfileList() {
-            let profileList = document.getElementById("profileList");
-            profileList.style.display = profileList.style.display === "block" ? "none" : "block";
-            loadProfiles();
-        }
-
-        function openFileInput() {
-            document.getElementById("profileImage").click();
-        }
-
-        function previewImage(event) {
-            let reader = new FileReader();
-            reader.onload = function() {
-                document.getElementById("previewImg").src = reader.result;
-            };
-            reader.readAsDataURL(event.target.files[0]);
-        }
-
-        function saveProfile() {
-            let id = document.getElementById("profileId").value.trim();
-            let name = document.getElementById("profileName").value.trim();
-            let description = document.getElementById("profileDescription").value.trim();
-            let image = document.getElementById("previewImg").src;
-
-            if (id === "" || name === "") {
-                alert("ID and Name are required!");
+            if (!id || !name || !description) {
+                alert("All fields are required!");
                 return;
             }
 
-            let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
-            profiles.push({ id, name, description, image });
-            localStorage.setItem("profiles", JSON.stringify(profiles));
+            let profile = {
+                id,
+                name,
+                description,
+                imageUrl: imageUrl || "https://via.placeholder.com/100" // Default profile pic
+            };
 
-            alert("Profile saved successfully!");
-            document.getElementById("profileId").value = "";
-            document.getElementById("profileName").value = "";
-            document.getElementById("profileDescription").value = "";
-            document.getElementById("previewImg").src = "https://via.placeholder.com/100";
-            loadProfiles();
+            localStorage.setItem(id, JSON.stringify(profile));
+            alert("Profile Created!");
+            showProfiles();
         }
 
-        function loadProfiles() {
-            let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
-            let profileList = document.getElementById("profileList");
-            profileList.innerHTML = "";
+        function showProfiles() {
+            let profilesDiv = document.getElementById("profilesList");
+            profilesDiv.innerHTML = "";
 
-            profiles.forEach(profile => {
-                let div = document.createElement("div");
-                div.className = "id-card";
-                div.innerHTML = `
-                    <img src="${profile.image}" class="profile-pic" alt="Profile Pic">
-                    <p><strong>ID:</strong> ${profile.id}</p>
-                    <p><strong>Name:</strong> ${profile.name}</p>
-                    <p><strong>Description:</strong> ${profile.description}</p>
+            for (let i = 0; i < localStorage.length; i++) {
+                let key = localStorage.key(i);
+                let profile = JSON.parse(localStorage.getItem(key));
+
+                let profileDiv = document.createElement("div");
+                profileDiv.classList.add("profile");
+
+                profileDiv.innerHTML = `
+                    <img src="${profile.imageUrl}" alt="Profile Pic">
+                    <h2>ID: ${profile.id}</h2>
+                    <p><b>Name:</b> ${profile.name}</p>
+                    <p><b>Description:</b> ${profile.description}</p>
                 `;
-                profileList.appendChild(div);
-            });
 
-            profileList.style.display = profiles.length > 0 ? "block" : "none";
+                profilesDiv.appendChild(profileDiv);
+            }
         }
 
-        function searchProfile() {
-            let query = document.getElementById("search").value.toLowerCase();
-            let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
-            let profileList = document.getElementById("profileList");
-            profileList.innerHTML = "";
+        function searchProfiles() {
+            let query = document.getElementById("searchInput").value.toLowerCase();
+            let profilesDiv = document.getElementById("profilesList");
+            profilesDiv.innerHTML = "";
 
-            profiles.forEach(profile => {
+            for (let i = 0; i < localStorage.length; i++) {
+                let key = localStorage.key(i);
+                let profile = JSON.parse(localStorage.getItem(key));
+
                 if (profile.id.toLowerCase().includes(query) || profile.name.toLowerCase().includes(query)) {
-                    let div = document.createElement("div");
-                    div.className = "id-card";
-                    div.innerHTML = `
-                        <img src="${profile.image}" class="profile-pic" alt="Profile Pic">
-                        <p><strong>ID:</strong> ${profile.id}</p>
-                        <p><strong>Name:</strong> ${profile.name}</p>
-                        <p><strong>Description:</strong> ${profile.description}</p>
-                    `;
-                    profileList.appendChild(div);
-                }
-            });
+                    let profileDiv = document.createElement("div");
+                    profileDiv.classList.add("profile");
 
-            profileList.style.display = "block";
+                    profileDiv.innerHTML = `
+                        <img src="${profile.imageUrl}" alt="Profile Pic">
+                        <h2>ID: ${profile.id}</h2>
+                        <p><b>Name:</b> ${profile.name}</p>
+                        <p><b>Description:</b> ${profile.description}</p>
+                    `;
+
+                    profilesDiv.appendChild(profileDiv);
+                }
+            }
         }
     </script>
 
