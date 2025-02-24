@@ -62,7 +62,6 @@
             box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
             cursor: pointer;
             transition: transform 0.2s;
-            position: relative;
         }
         .profile:hover {
             transform: scale(1.02);
@@ -73,21 +72,22 @@
             border-radius: 50%;
             border: 2px solid #007bff;
         }
+        .profile-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
         .delete-btn, .edit-btn {
-            position: absolute;
-            right: 10px;
             background-color: red;
             border: none;
-            padding: 5px;
+            padding: 8px 16px;
             border-radius: 5px;
             cursor: pointer;
             color: white;
-        }
-        .delete-btn {
-            top: 10px;
+            font-size: 14px;
         }
         .edit-btn {
-            top: 50px;
             background-color: orange;
         }
 
@@ -121,8 +121,25 @@
             border-radius: 50%;
             cursor: pointer;
         }
-        .blur-background {
-            filter: blur(5px);
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+        .close-btn:hover {
+            background: #ff1a1a;
         }
     </style>
 </head>
@@ -144,7 +161,8 @@
 
     <!-- Profile Form Popup -->
     <div id="profileForm" class="popup">
-        <h2>Create Profile</h2>
+        <button class="close-btn" onclick="closeProfileForm()">×</button>
+        <h2 id="formTitle">Create Profile</h2>
         <div onclick="selectImage()" style="display: inline-block;">
             <img id="profileImagePreview" src="https://via.placeholder.com/150" alt="Profile Pic">
         </div>
@@ -154,21 +172,26 @@
         <input type="text" id="profileID" placeholder="Enter Profile ID">
         <input type="text" id="profileName" placeholder="Enter Name">
         <input type="text" id="profileDescription" placeholder="Enter Description">
-        <button onclick="createProfile()">Save Profile</button>
+        <button onclick="saveProfile()" id="saveButton">Save Profile</button>
         <button onclick="closeProfileForm()">Cancel</button>
     </div>
 
     <script>
         document.addEventListener("DOMContentLoaded", showProfiles);
 
+        let editingIndex = null; // Track the profile being edited
+
         function showProfileForm() {
             document.getElementById("profileForm").classList.add("show");
-            document.body.classList.add("blur-background");
+            document.getElementById("formTitle").innerText = "Create Profile";
+            document.getElementById("saveButton").innerText = "Save Profile";
+            editingIndex = null; // Reset editing index
+            clearForm();
         }
 
         function closeProfileForm() {
             document.getElementById("profileForm").classList.remove("show");
-            document.body.classList.remove("blur-background");
+            clearForm();
         }
 
         function selectImage() {
@@ -187,7 +210,14 @@
             document.getElementById("profileImagePreview").src = "https://via.placeholder.com/150";
         }
 
-        function createProfile() {
+        function clearForm() {
+            document.getElementById("profileID").value = "";
+            document.getElementById("profileName").value = "";
+            document.getElementById("profileDescription").value = "";
+            document.getElementById("profileImagePreview").src = "https://via.placeholder.com/150";
+        }
+
+        function saveProfile() {
             let id = document.getElementById("profileID").value;
             let name = document.getElementById("profileName").value;
             let description = document.getElementById("profileDescription").value;
@@ -198,11 +228,25 @@
                 return;
             }
 
-            let profile = { id, name, description, imageUrl };
             let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
-            profiles.push(profile);
-            localStorage.setItem("profiles", JSON.stringify(profiles));
 
+            // Check for duplicate ID (only when creating a new profile)
+            if (editingIndex === null && profiles.some(p => p.id === id)) {
+                alert("Profile ID already exists!");
+                return;
+            }
+
+            let profile = { id, name, description, imageUrl };
+
+            if (editingIndex !== null) {
+                // Update existing profile
+                profiles[editingIndex] = profile;
+            } else {
+                // Add new profile
+                profiles.push(profile);
+            }
+
+            localStorage.setItem("profiles", JSON.stringify(profiles));
             closeProfileForm();
             showProfiles();
         }
@@ -217,12 +261,14 @@
                 let profileDiv = document.createElement("div");
                 profileDiv.classList.add("profile");
                 profileDiv.innerHTML = `
-                    <button class="delete-btn" onclick="deleteProfile(${index})">X</button>
-                    <button class="edit-btn" onclick="editProfile(${index})">Edit</button>
                     <img src="${profile.imageUrl}" alt="Profile Pic">
                     <h2>ID: ${profile.id}</h2>
                     <p><b>Name:</b> ${profile.name}</p>
                     <p><b>Description:</b> ${profile.description}</p>
+                    <div class="profile-buttons">
+                        <button class="delete-btn" onclick="deleteProfile(${index})">Delete</button>
+                        <button class="edit-btn" onclick="editProfile(${index})">Edit</button>
+                    </div>
                 `;
                 profilesDiv.appendChild(profileDiv);
             });
@@ -233,6 +279,24 @@
             profiles.splice(index, 1);
             localStorage.setItem("profiles", JSON.stringify(profiles));
             showProfiles();
+        }
+
+        function editProfile(index) {
+            let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
+            let profile = profiles[index];
+
+            // Fill the form with profile data
+            document.getElementById("profileID").value = profile.id;
+            document.getElementById("profileName").value = profile.name;
+            document.getElementById("profileDescription").value = profile.description;
+            document.getElementById("profileImagePreview").src = profile.imageUrl;
+
+            // Update form title and button
+            document.getElementById("formTitle").innerText = "Edit Profile";
+            document.getElementById("saveButton").innerText = "Update Profile";
+
+            editingIndex = index; // Set the editing index
+            document.getElementById("profileForm").classList.add("show");
         }
 
         function searchProfile() {
